@@ -20,11 +20,6 @@ load_dotenv()
 
 # Reference Docs - https://docs.giskard.ai/en/latest/reference/notebooks/LLM_QA_Documentation.html
 
-# Set the OpenAI API Key environment variable.
-# OPENAI_API_KEY = ""
-# openai.api_key = os.environ['OPENAI_API_KEY']
-# os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
-
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 openai.api_key = os.environ['OPENAI_API_KEY']
 
@@ -32,15 +27,13 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 # Display options.
 pd.set_option("display.max_colwidth", None)
 
-# DATA_URL = "https://drive.google.com/file/d/1bXvNo_k-vFA9Wmjbu5eq5S_J8J6wElMp/view?usp=drive_link"
 PDF_LOCATION = "exampleHRDoc/Generic-HR-Policy.pdf"
 
 LLM_NAME = "text-ada-001"
 
 def get_context_storage() -> FAISS:
-    """Initialize a vector storage with the context."""
+    """Initialize a vector storage of embedded HR document information.""" # Add context here
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    # docs = OnlinePDFLoader(DATA_URL).load_and_split(text_splitter)
     docs = PyPDFLoader(PDF_LOCATION).load_and_split(text_splitter)
     db = FAISS.from_documents(docs, embeddings)
     return db
@@ -90,5 +83,4 @@ now = datetime.now()
 dt_string = now.strftime("%d-%m-%Y-%H:%M:%S")
 
 # Save it to a file
-# results.to_html("../output/scan_report.html")
 results.to_html(f'../output/scan_report_{dt_string}.html')
