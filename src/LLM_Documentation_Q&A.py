@@ -24,8 +24,8 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 # Display options.
 pd.set_option("display.max_colwidth", None)
 
-# PDF_LOCATION = "exampleHRDoc/Generic-HR-Policy.pdf"
-PDF_LOCATION = "exampleHRDoc/Generic-HR-Policy_Short.pdf"
+PDF_LOCATION = "exampleHRDoc/Generic-HR-Policy.pdf"
+# PDF_LOCATION = "exampleHRDoc/Generic-HR-Policy_Short.pdf"
 
 LLM_NAME = "text-ada-001"
 # LLM_NAME = "gpt-3.5-turbo"
@@ -67,7 +67,12 @@ giskard_model = Model(
     save_db=save_local
 )
 
-results = scan(giskard_model, only="robustness")
+# Can't find a list of scans. Checking the following
+# performance = ?
+# robustness = Works
+# overconfidence = ?
+# spurious correlation = ?
+results = scan(giskard_model, only=["robustness"])
 
 # Generate the output path if it doesn't exist
 isExist = os.path.exists("./output")
