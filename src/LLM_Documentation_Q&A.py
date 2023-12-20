@@ -28,6 +28,7 @@ pd.set_option("display.max_colwidth", None)
 PDF_LOCATION = "exampleHRDoc/Generic-HR-Policy_Short.pdf"
 
 LLM_NAME = "text-ada-001"
+# LLM_NAME = "gpt-3.5-turbo"
 
 # Create the embeddings based on the PDF provided
 def get_context_storage() -> FAISS:
@@ -66,17 +67,17 @@ giskard_model = Model(
     save_db=save_local
 )
 
-results = scan(giskard_model)
+results = scan(giskard_model, only="robustness")
 
 # Generate the output path if it doesn't exist
-isExist = os.path.exists("../output")
+isExist = os.path.exists("./output")
 
 if not isExist:
-    os.makedirs("../output")
+    os.makedirs("./output")
 
 now = datetime.now()
 
 dt_string = now.strftime("%d-%m-%Y-%H:%M:%S")
 
 # Save it to a file
-results.to_html(f'../output/scan_report_{dt_string}.html')
+results.to_html(f'./output/scan_report_{dt_string}.html')
