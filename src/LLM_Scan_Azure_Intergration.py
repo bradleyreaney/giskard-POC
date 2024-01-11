@@ -2,6 +2,7 @@ import os
 import giskard
 import requests
 import pandas as pd
+from giskard.llm import set_llm_model
 from datetime import datetime
 from urllib.parse import quote
 from dotenv import load_dotenv
@@ -9,10 +10,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Reference Docs - https://docs.giskard.ai/en/latest/open_source/scan/scan_llm/index.html
-# Note - Open AI key needs GPT-4 access
 base_api_url = os.environ["BASE_API_URL"]
 base_api_key = os.environ["BASE_API_KEY"]
 output_path = os.environ["OUTPUT_PATH"]
+
+# Open AI / Azure OpenAI Service will need GPT-4 access
+# You'll need to provide the name of the model that you've deployed
+# Beware, the model provided must be capable of using function calls
+# The bellow is only needed it you're using Azzure OpenAI Service. Otherwise comment it out.
+set_llm_model('my-gpt-4-model')
 
 llm_description = "This is an internal RAG based LLM Chatbot. It will be used to answer low value questions staff may have around HR polices. It will have access to our internal HR policy documentation and will use these documents alone for it's context when answering questions"
 
@@ -37,7 +43,7 @@ giskard_model = giskard.Model(
 # The 'robustness' option is free so a good option to use when getting up and running.
 # In the 'giskark.scan()' function, leaving out the 'only=["OPTIONS"]' will run every type.
 #  - robustness 
-#  - text_generation (This seems to be the option that costs)
+#  - text_generation
 scan_results = giskard.scan(giskard_model, only=["robustness"])
 # scan_results = giskard.scan(giskard_model)
 
