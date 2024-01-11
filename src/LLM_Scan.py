@@ -1,49 +1,58 @@
 import os
 import giskard
+import requests
 import pandas as pd
 from datetime import datetime
-import requests
-
+from urllib.parse import quote
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Reference Docs - https://docs.giskard.ai/en/latest/open_source/scan/scan_llm/index.html
-
 # Note - Open AI key needs GPT-4 access
 
-now = datetime.now()
+base_api_url = os.environ["BASE_API_URL"]
+base_api_key = os.environ["BASE_API_KEY"]
+output_path = os.environ["OUTPUT_PATH"]
 
-dt_string = now.strftime("%d-%m-%Y-%H:%M:%S")
-
+llm_description = "This is an internal RAG based LLM Chatbot. It will be used to answer low value questions staff may have around HR polices. It will have access to our internal HR policy documentation and will use these documents alone for it's context when answering questions"
 
 def model_predict(df: pd.DataFrame):
-    """Wraps the LLM call in a simple Python function.
-
-    The function takes a pandas.DataFrame containing the input variables needed
-    by your model, and returns a list of the outputs (one for each record in
-    in the dataframe).
-    """
+    def llm_api(input_questions):
+        response = requests.get(f"{base_api_url}/prod/answer?question={quote(input_questions)}", headers={"x-api-key":base_api_key})
+        print("RAG API Response - " + response.content)
+        return response.content
     return [llm_api(question) for question in df["question"].values]
-
 
 # Create a giskard.Model object. Don’t forget to fill the `name` and `description`
 # parameters: they will be used by our scan to generate domain-specific tests.
 giskard_model = giskard.Model(
     model=model_predict,  # our model function
     model_type="text_generation",
-    name="Nimble AI LLM Chatbot",
-    description="Nimble AI LLM Chatbot",
+    name="Internal AI LLM Chatbot",
+    description=llm_description,
     feature_names=["question"],  # input variables needed by your model
 )
+ 
+# Options you can pass into the scan. 
+# The 'robustness' option is free so a good option to use when getting up and running.
+# In the 'giskark.scan()' function, leaving out the 'only=["OPTIONS"]' will run every type.
+#  - robustness 
+#  - text_generation (This seems to be the option that costs)
 
-scan_results = giskard.scan(giskard_model)
+scan_results = giskard.scan(giskard_model, only=["robustness"])
+# scan_results = giskard.scan(giskard_model)
 
 # Generate the output path if it doesn't exist
-isExist = os.path.exists("../output")
+isExist = os.path.exists(output_path)
 
 if not isExist:
-    os.makedirs("../output")
+    os.makedirs(output_path)
+
+now = datetime.now()
+dt_string = now.strftime("%d-%m-%Y-%H:%M:%S")
 
 # Save it to a file
-scan_results.to_html(f'../output/scan_report_{dt_string}.html')
+scan_results.to_html(f'{output_path}/scan_report_{dt_string}.html')
+
+

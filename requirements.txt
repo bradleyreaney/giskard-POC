@@ -16,3 +16,4 @@ langchain
 pypdf
 tiktoken
 python-dotenv
+requests
