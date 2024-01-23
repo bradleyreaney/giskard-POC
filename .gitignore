@@ -160,3 +160,4 @@ cython_debug/
 .idea/
 
 output/scan_report**.html
+.DS_Store

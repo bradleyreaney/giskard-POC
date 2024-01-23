@@ -9,39 +9,34 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Reference Docs - https://docs.giskard.ai/en/latest/open_source/scan/scan_llm/index.html
-# Note - Open AI key needs GPT-4 access
-base_api_url = os.environ["BASE_API_URL"]
-base_api_key = os.environ["BASE_API_KEY"]
+
+nimble_api_url = os.environ["NIMBLE_API_URL"]
+nimble_api_key = os.environ["NIMBLE_API_KEY"]
 output_path = os.environ["OUTPUT_PATH"]
 
-llm_description = "This is an internal RAG based LLM Chatbot. It will be used to answer low value questions staff may have around HR polices. It will have access to our internal HR policy documentation and will use these documents alone for it's context when answering questions"
+llm_description = "This is an internal RAG based LLM Chatbot. It will be used to answer low value questions staff may have around HR polices. It will have access to our internal HR policy documentation and will use these documents alone for it's context when answering questions. Please note that we're a UK based company so questions will be based on UK terminology. For instance we'd say holiday or annual leave instead of vacation."
+
+def log_helper(message, logEntry):
+    print(f"INFO - {datetime.now()} - {message} - {logEntry}")
 
 def model_predict(df: pd.DataFrame):
     def llm_api(input_questions):
-        response = requests.get(f"{base_api_url}/prod/answer?question={quote(input_questions)}", headers={"x-api-key":base_api_key})
-        print("RAG API Response - " + response.content)
-        return response.content
+        log_helper("LLM Called with the following question", input_questions)
+        response = requests.get(f"{nimble_api_url}/prod/answer?question={quote(input_questions)}", headers={"x-api-key": nimble_api_key}, timeout=30)
+        log_helper("LLM Response", response.content.decode('utf-8'))
+        return response.content.decode('utf-8')
     return [llm_api(question) for question in df["question"].values]
 
-# Create a giskard.Model object. Don’t forget to fill the `name` and `description`
-# parameters: they will be used by our scan to generate domain-specific tests.
 giskard_model = giskard.Model(
-    model=model_predict,  # our model function
+    model=model_predict,
     model_type="text_generation",
     name="Internal AI LLM Chatbot",
     description=llm_description,
-    feature_names=["question"],  # input variables needed by your model
+    feature_names=["question"],
 )
- 
-# Options you can pass into the scan. 
-# The 'robustness' option is free so a good option to use when getting up and running.
-# In the 'giskark.scan()' function, leaving out the 'only=["OPTIONS"]' will run every type.
-#  - robustness 
-#  - text_generation (This seems to be the option that costs)
-scan_results = giskard.scan(giskard_model, only=["robustness"])
-# scan_results = giskard.scan(giskard_model)
 
-# Generate the output path if it doesn't exist
+scan_results = giskard.scan(giskard_model)
+
 isExist = os.path.exists(output_path)
 
 if not isExist:
@@ -50,7 +45,6 @@ if not isExist:
 now = datetime.now()
 dt_string = now.strftime("%d-%m-%Y-%H:%M:%S")
 
-# Save it to a file
 scan_results.to_html(f'{output_path}/scan_report_{dt_string}.html')
 
 
